@@ -1,0 +1,76 @@
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Твои места (скопировал из твоего рабочего кода, можно добавить больше)
+const PLACES = [
+  { name: "Dafen Oil Painting Village", interests: ["Culture & History", "Shopping", "Photography Spots"] },
+  { name: "OCT Loft Creative Culture Park", interests: ["Culture & History", "Photography Spots", "Entertainment"] },
+  { name: "Shenzhen Bay Park", interests: ["Nature & Parks", "Photography Spots"] },
+  { name: "Huaqiangbei Electronics Market", interests: ["Shopping", "Entertainment", "Nightlife"] },
+  { name: "Wutong Mountain", interests: ["Nature & Parks", "Sports & Fitness"] },
+  { name: "COCO Park", interests: ["Shopping", "Food & Dining"] },
+  { name: "Window of the World", interests: ["Culture & History", "Entertainment", "Photography Spots"] },
+  { name: "Splendid China Folk Village", interests: ["Culture & History", "Entertainment"] },
+  { name: "Luohu Commercial City", interests: ["Shopping", "Food & Dining"] },
+  { name: "Dongmen Pedestrian Street", interests: ["Shopping", "Food & Dining", "Nightlife"] },
+  { name: "Nanshan Mountain", interests: ["Nature & Parks", "Sports & Fitness", "Photography Spots"] },
+  { name: "Shekou Sea World", interests: ["Entertainment", "Nightlife", "Food & Dining"] },
+  { name: "Shenzhen Museum", interests: ["Culture & History"] },
+  { name: "Fairy Lake Botanical Garden", interests: ["Nature & Parks"] },
+  { name: "OCT East", interests: ["Entertainment", "Nature & Parks"] },
+];
+
+// Функция генерации маршрута (твоя логика, адаптирована под JS)
+function generateRoute(data) {
+  const days = data.days || 1;
+  const hours = data.hours || '8';
+  const interests = data.interests || [];
+  const budget = data.budget || '$';
+
+  const placesPerDay = hours === '4' ? 2 : hours === '8' ? 3 : 4;
+  const totalPlacesNeeded = days * placesPerDay;
+
+  let matchedPlaces = [];
+  for (const place of PLACES) {
+    if (interests.length === 0 || interests.some(i => place.interests.includes(i))) {
+      matchedPlaces.push(place.name);
+    }
+  }
+
+  if (matchedPlaces.length === 0) {
+    matchedPlaces = PLACES.map(p => p.name);
+  }
+
+  const selected = matchedPlaces.slice(0, totalPlacesNeeded);
+
+  let route = "🗺 Your Shenzhen trip plan\n\n";
+  let idx = 0;
+  for (let day = 1; day <= days; day++) {
+    const dayInterests = interests.slice(0, 2).join(', ') || 'Общий';
+    route += `Day ${day} — ${dayInterests}\n`;
+    for (let i = 0; i < placesPerDay; i++) {
+      if (idx < selected.length) {
+        route += `• ${selected[idx]}\n`;
+        idx++;
+      }
+    }
+    route += "\n";
+  }
+
+  route += "Tips:\n• Metro stations included\n• Adjust pace if needed 🙂";
+
+  return route;
+}
+
+app.post('/api/generate', (req, res) => {
+  const data = req.body;
+  const route = generateRoute(data);
+  res.json({ route });
+});
+
+// Для Vercel Serverless — экспортируем
+module.exports = app;
